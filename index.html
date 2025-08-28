@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .notification {
+        animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(0); }
+    }
+</style>
+<body class="bg-gray-100">
+    <div id="app" class="min-h-screen">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="p-6 max-w-sm mx-auto mt-20">
+            <h2 class="text-2xl font-bold mb-6 text-center">Visitor Management System</h2>
+            <div class="bg-white rounded-lg shadow p-6">
+                <select id="userType" class="w-full mb-4 p-2 border rounded">
+                    <option value="">Select User Type</option>
+                    <option value="admin">Admin</option>
+                    <option value="guard">Guard</option>
+                    <option value="owner">House Owner</option>
+                </select>
+                <input type="text" id="username" placeholder="Username/Phone" class="w-full mb-4 p-2 border rounded">
+                <input type="password" id="password" placeholder="Password" class="w-full mb-4 p-2 border rounded">
+                <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Admin Dashboard</h2>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+                </div>
+                
+                <!-- Add House Form -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Add House</h3>
+                    <input type="text" id="houseNumber" placeholder="House Number" class="w-full mb-4 p-2 border rounded">
+                    <button onclick="addHouse()" class="bg-green-500 text-white px-4 py-2 rounded">Add House</button>
+                </div>
+
+                <!-- Add Owner Form -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Add Owner</h3>
+                    <input type="text" id="ownerName" placeholder="Owner Name" class="w-full mb-4 p-2 border rounded">
+                    <input type="tel" id="ownerPhone" placeholder="Contact Number" class="w-full mb-4 p-2 border rounded">
+                    <input type="email" id="ownerEmail" placeholder="Email" class="w-full mb-4 p-2 border rounded">
+                    <select id="ownerHouse" class="w-full mb-4 p-2 border rounded">
+                        <option value="">Select House Number</option>
+                    </select>
+                    <button onclick="addOwner()" class="bg-green-500 text-white px-4 py-2 rounded">Add Owner</button>
+                </div>
+
+                <!-- Houses List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4">Registered Houses</h3>
+                    <div id="housesList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guard Dashboard -->
+        <div id="guardDashboard" class="hidden p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Guard Dashboard</h2>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+                </div>
+
+                <!-- Visitor Entry Form -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">New Visitor Entry</h3>
+                    <input type="text" id="visitorName" placeholder="Visitor Name" class="w-full mb-4 p-2 border rounded">
+                    <input type="tel" id="visitorPhone" placeholder="Contact Number" class="w-full mb-4 p-2 border rounded">
+                    <input type="text" id="purpose" placeholder="Purpose of Visit" class="w-full mb-4 p-2 border rounded">
+                    <input type="text" id="vehicleNumber" placeholder="Vehicle Number (Optional)" class="w-full mb-4 p-2 border rounded">
+                    <select id="visitHouse" class="w-full mb-4 p-2 border rounded">
+                        <option value="">Select House Number</option>
+                    </select>
+                    <div class="mb-4">
+                        <label class="block mb-2">Visitor's Photo</label>
+                        <input type="file" id="visitorPhoto" accept="image/*" capture="camera" class="w-full">
+                    </div>
+                    <button onclick="submitVisitor()" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+                </div>
+
+                <!-- Visitors List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4">Recent Visitors</h3>
+                    <div id="visitorsList" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Dashboard -->
+        <div id="ownerDashboard" class="hidden p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Owner Dashboard</h2>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+                </div>
+
+                <!-- Pending Approvals -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Pending Approvals</h3>
+                    <div id="pendingApprovals" class="space-y-4"></div>
+                </div>
+
+                <!-- Visit History -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4">Visit History</h3>
+                    <div id="visitHistory" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let houses = [];
+        let owners = [];
+        let visitors = [];
+
+        // Initialize data from localStorage
+        function initializeData() {
+            houses = JSON.parse(localStorage.getItem('houses') || '[]');
+            owners = JSON.parse(localStorage.getItem('owners') || '[]');
+            visitors = JSON.parse(localStorage.getItem('visitors') || '[]');
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('houses', JSON.stringify(houses));
+            localStorage.setItem('owners', JSON.stringify(owners));
+            localStorage.setItem('visitors', JSON.stringify(visitors));
+        }
+
+        // Login function
+        function login() {
+            const userType = document.getElementById('userType').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!userType || !username || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // Simple authentication logic
+            if (userType === 'admin' && username === 'admin' && password === 'admin123') {
+                currentUser = { type: 'admin' };
+                showDashboard('admin');
+            } else if (userType === 'guard' && username === 'guard' && password === 'guard123') {
+                currentUser = { type: 'guard' };
+                showDashboard('guard');
+            } else if (userType === 'owner') {
+                const owner = owners.find(o => o.phone === username && password === 'Villa@123');
+                if (owner) {
+                    currentUser = { type: 'owner', ...owner };
+                    showDashboard('owner');
+                } else {
+                    alert('Invalid credentials');
+                }
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            showDashboard('login');
+        }
+
+        // Show appropriate dashboard
+        function showDashboard(type) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('guardDashboard').classList.add('hidden');
+            document.getElementById('ownerDashboard').classList.add('hidden');
+
+            if (type === 'login') {
+                document.getElementById('loginScreen').classList.remove('hidden');
+            } else {
+                document.getElementById(`${type}Dashboard`).classList.remove('hidden');
+                updateDashboard(type);
+            }
+        }
+
+        // Add house function
+        function addHouse() {
+            const houseNumber = document.getElementById('houseNumber').value;
+            if (!houseNumber) {
+                alert('Please enter house number');
+                return;
+            }
+            
+            if (houses.some(h => h.number === houseNumber)) {
+                alert('House number already exists');
+                return;
+            }
+
+            houses.push({
+                id: Date.now().toString(),
+                number: houseNumber
+            });
+            saveData();
+            document.getElementById('houseNumber').value = '';
+            updateDashboard('admin');
+        }
+
+        // Add owner function
+        function addOwner() {
+            const name = document.getElementById('ownerName').value;
+            const phone = document.getElementById('ownerPhone').value;
+            const email = document.getElementById('ownerEmail').value;
+            const houseId = document.getElementById('ownerHouse').value;
+
+            if (!name || !phone || !email || !houseId) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            owners.push({
+                id: Date.now().toString(),
+                name,
+                phone,
+                email,
+                houseId
+            });
+            saveData();
+            document.getElementById('ownerName').value = '';
+            document.getElementById('ownerPhone').value = '';
+            document.getElementById('ownerEmail').value = '';
+            document.getElementById('ownerHouse').value = '';
+            updateDashboard('admin');
+        }
+
+        // Submit visitor function
+        async function submitVisitor() {
+            const name = document.getElementById('visitorName').value;
+            const phone = document.getElementById('visitorPhone').value;
+            const purpose = document.getElementById('purpose').value;
+            const houseId = document.getElementById('visitHouse').value;
+            const vehicleNumber = document.getElementById('vehicleNumber').value;
+            const photoInput = document.getElementById('visitorPhoto');
+
+            if (!name || !phone || !purpose || !houseId) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const visitor = {
+                id: Date.now().toString(),
+                name,
+                phone,
+                purpose,
+                houseId,
+                vehicleNumber,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            if (photoInput.files.length > 0) {
+                visitor.photo = await getBase64(photoInput.files[0]);
+            }
+
+            visitors.push(visitor);
+            saveData();
+            
+            // Clear form
+            document.getElementById('visitorName').value = '';
+            document.getElementById('visitorPhone').value = '';
+            document.getElementById('purpose').value = '';
+            document.getElementById('visitHouse').value = '';
+            document.getElementById('vehicleNumber').value = '';
+            document.getElementById('visitorPhoto').value = '';
+
+            showNotification('Visitor request sent to house owner');
+            updateDashboard('guard');
+        }
+
+        // Handle visitor approval/rejection
+        function handleVisitorRequest(visitorId, approved) {
+            const visitor = visitors.find(v => v.id === visitorId);
+            if (visitor) {
+                visitor.status = approved ? 'approved' : 'rejected';
+                saveData();
+                updateDashboard('owner');
+                showNotification(`Visitor ${approved ? 'approved' : 'rejected'}`);
+            }
+        }
+
+        // Update dashboard content
+        function updateDashboard(type) {
+            if (type === 'admin') {
+                // Update houses list
+                const housesList = document.getElementById('housesList');
+                housesList.innerHTML = houses.map(house => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <span>House ${house.number}</span>
+                        <button onclick="deleteHouse('${house.id}')" class="text-red-500">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                // Update house select in owner form
+                const ownerHouseSelect = document.getElementById('ownerHouse');
+                ownerHouseSelect.innerHTML = `
+                    <option value="">Select House Number</option>
+                    ${houses.map(house => `
+                        <option value="${house.id}">House ${house.number}</option>
+                    `).join('')}
+                `;
+            }
+
+            if (type === 'guard') {
+                // Update house select in visitor form
+                const visitHouseSelect = document.getElementById('visitHouse');
+                visitHouseSelect.innerHTML = `
+                    <option value="">Select House Number</option>
+                    ${houses.map(house => `
+                        <option value="${house.id}">House ${house.number}</option>
+                    `).join('')}
+                `;
+
+                // Update visitors list
+                const visitorsList = document.getElementById('visitorsList');
+                visitorsList.innerHTML = visitors.map(visitor => {
+                    const house = houses.find(h => h.id === visitor.houseId);
+                    return `
+                        <div class="p-4 bg-gray-50 rounded">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">${visitor.name}</h4>
+                                    <p class="text-sm text-gray-600">House ${house?.number || 'Unknown'}</p>
+                                    <p class="text-sm text-gray-600">${new Date(visitor.timestamp).toLocaleString()}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-2 py-1 rounded text-sm ${
+                                        visitor.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                        visitor.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                        'bg-yellow-100 text-yellow-800'
+                                    }">${visitor.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (type === 'owner' && currentUser) {
+                // Update pending approvals
+                const pendingApprovals = document.getElementById('pendingApprovals');
+                pendingApprovals.innerHTML = visitors
+                    .filter(v => v.houseId === currentUser.houseId && v.status === 'pending')
+                    .map(visitor => `
+                        <div class="p-4 bg-gray-50 rounded">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold">${visitor.name}</h4>
+                                    <p class="text-sm text-gray-600">${visitor.purpose}</p>
+                                    <p class="text-sm text-gray-600">${new Date(visitor.timestamp).toLocaleString()}</p>
+                                    ${visitor.photo ? `<img src="${visitor.photo}" class="mt-2 w-32 h-32 object-cover rounded">` : ''}
+                                </div>
+                                <div class="space-x-2">
+                                    <button onclick="handleVisitorRequest('${visitor.id}', true)" 
+                                            class="bg-green-500 text-white px-3 py-1 rounded">
+                                        Approve
+                                    </button>
+                                    <button onclick="handleVisitorRequest('${visitor.id}', false)"
+                                            class="bg-red-500 text-white px-3 py-1 rounded">
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                // Update visit history
+                const visitHistory = document.getElementById('visitHistory');
+                visitHistory.innerHTML = visitors
+                    .filter(v => v.houseId === currentUser.houseId && v.status !== 'pending')
+                    .map(visitor => `
+                        <div class="p-4 bg-gray-50 rounded">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">${visitor.name}</h4>
+                                    <p class="text-sm text-gray-600">${visitor.purpose}</p>
+                                    <p class="text-sm text-gray-600">${new Date(visitor.timestamp).toLocaleString()}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded text-sm ${
+                                    visitor.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }">${visitor.status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+        }
+
+        // Utility function to convert file to base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Delete house function
+        function deleteHouse(houseId) {
+            if (confirm('Are you sure you want to delete this house?')) {
+                houses = houses.filter(h => h.id !== houseId);
+                owners = owners.filter(o => o.houseId !== houseId);
+                saveData();
+                updateDashboard('admin');
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            showDashboard('login');
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
